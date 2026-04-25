@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postres Artesanales | Promo Envío Gratis</title>
+    <style>
+        :root {
+            --primario: #f8ad9d; 
+            --oscuro: #4a342e;
+            --claro: #fffcfb;
+            --acento: #ffdfd3;
+            --exito: #25d366;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background-color: var(--claro); color: var(--oscuro); }
+
+        header { background: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .logo { font-weight: bold; font-size: 1.5rem; color: var(--primario); text-decoration: none; }
+        
+        /* Banner de Oferta */
+        .promo-banner { background: var(--oscuro); color: white; text-align: center; padding: 8px; font-size: 0.9rem; font-weight: bold; }
+
+        .hero { padding: 60px 5%; text-align: center; background: linear-gradient(rgba(255,249,248,0.8), rgba(255,249,248,0.8)), url('https://images.unsplash.com/photo-1551024601-bec78aea704b?w=1200'); background-size: cover; background-position: center; }
+        
+        .productos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 40px 5%; max-width: 1200px; margin: auto; }
+        .card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--acento); transition: 0.3s; position: relative; }
+        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .card-info { padding: 20px; }
+        
+        .btn-add { background: var(--primario); border: none; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; width: 80%; }
+
+        /* --- BARRA DE PROGRESO ENVÍO --- */
+        .shipping-meter {
+            background: white; padding: 15px; border-radius: 15px; margin: 10px 0;
+            border: 1px solid var(--acento);
+        }
+        .progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { background: var(--exito); height: 100%; width: 0%; transition: 0.5s; }
+
+        /* --- MODAL --- */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin: 8px 0 15px; }
+        
+        #carrito-flotante {
+            position: fixed; bottom: 30px; right: 30px; background: var(--exito); color: white;
+            padding: 15px 25px; border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: none; z-index: 1500;
+        }
+
+        footer { background: var(--oscuro); color: white; padding: 40px; text-align: center; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="promo-banner">✨ ¡ENVÍO GRATIS EN NELSON COMPRANDO $6.000 O MÁS! ✨</div>
+
+<header>
+    <a href="#" class="logo">🍰 DULCE MOMENTO</a>
+</header>
+
+<section class="hero">
+    <h1>El antojo perfecto</h1>
+    <p>Artesanal, fresco y directo a tu puerta.</p>
+</section>
+
+<section id="catalogo" class="productos"></section>
+
+<div id="modalEnvio" class="modal">
+    <div class="modal-content">
+        <h3 id="titulo-modal">Tu Pedido</h3>
+        
+        <div class="shipping-meter">
+            <span id="shipping-text">¡Faltan $6000 para el envío gratis!</span>
+            <div class="progress-container"><div id="barra" class="progress-bar"></div></div>
+        </div>
+
+        <input type="text" id="nombreCliente" placeholder="Tu Nombre">
+        <input type="text" id="direccionCliente" placeholder="Dirección en Nelson o Zona">
+        
+        <button onclick="finalizarCompra()" class="btn-add" style="width:100%">Finalizar por WhatsApp</button>
+        <p onclick="cerrarModal()" style="text-align:center; color:gray; cursor:pointer; margin-top:15px; font-size:0.8rem;">Seguir comprando</p>
+    </div>
+</div>
+
+<div id="carrito-flotante" onclick="abrirModal()">
+    🛒 Ver mi pedido (<span id="cuenta-carrito">0</span>)
+</div>
+
+<footer><p>📍 Nelson, Santa Fe | @TuUsuarioIg</p></footer>
+
+<script>
+    const MIN_ENVIO_GRATIS = 6000;
+    const postres = [
+        { id: 1, nombre: "Tarta de Frutos Rojos", precio: 3500, img: "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=500" },
+        { id: 2, nombre: "Cheesecake de Oreo", precio: 3200, img: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=500" },
+        { id: 3, nombre: "Brownie con Nuez", precio: 1500, img: "https://images.unsplash.com/photo-1461009112044-32471ee8a629?w=500" },
+        { id: 4, nombre: "Lemon Pie", precio: 2800, img: "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=500" }
+    ];
+
+    let carrito = {};
+
+    function init() {
+        const grid = document.getElementById('catalogo');
+        grid.innerHTML = postres.map(p => `
+            <div class="card">
+                <img src="${p.img}" alt="${p.nombre}">
+                <div class="card-info">
+                    <h3>${p.nombre}</h3>
+                    <p style="color:var(--primario); font-weight:bold;">$${p.precio}</p>
+                    <button class="btn-add" onclick="agregar(${p.id})">Agregar</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function agregar(id) {
+        carrito[id] = (carrito[id] || 0) + 1;
+        updateCart();
+    }
+
+    function updateCart() {
+        const count = Object.values(carrito).reduce((a,b)=>a+b,0);
+        document.getElementById('cuenta-carrito').innerText = count;
+        document.getElementById('carrito-flotante').style.display = 'block';
+        
+        // Calcular progreso de envío gratis
+        let total = 0;
+        for(let id in carrito) {
+            total += postres.find(x => x.id == id).precio * carrito[id];
+        }
+
+        const porcentaje = Math.min((total / MIN_ENVIO_GRATIS) * 100, 100);
+        document.getElementById('barra').style.width = porcentaje + "%";
+        
+        const texto = document.getElementById('shipping-text');
+        if(total >= MIN_ENVIO_GRATIS) {
+            texto.innerText = "¡FELICITACIONES! Tienes envío gratis.";
+            texto.style.color = "var(--exito)";
+        } else {
+            texto.innerText = `¡Faltan $${MIN_ENVIO_GRATIS - total} para el envío gratis!`;
+            texto.style.color = "var(--oscuro)";
+        }
+    }
+
+    function abrirModal() { document.getElementById('modalEnvio').style.display = 'block'; }
+    function cerrarModal() { document.getElementById('modalEnvio').style.display = 'none'; }
+
+    function finalizarCompra() {
+        const nombre = document.getElementById('nombreCliente').value;
+        const direccion = document.getElementById('direccionCliente').value;
+        if(!nombre || !direccion) { alert("Completa tus datos"); return; }
+
+        const tel = "549342000000"; 
+        let total = 0;
+        let msg = `*PEDIDO WEB*%0A👤: ${nombre}%0A📍: ${direccion}%0A%0A`;
+
+        for(let id in carrito) {
+            const p = postres.find(x => x.id == id);
+            msg += `- ${carrito[id]}x ${p.nombre}%0A`;
+            total += p.precio * carrito[id];
+        }
+
+        msg += `%0A*Subtotal: $${total}*`;
+        msg += total >= MIN_ENVIO_GRATIS ? `%0A🚚 *Envío: GRATIS*` : `%0A🚚 *Envío: A coordinar*`;
+        msg += `%0A%0A*TOTAL: $${total}*`;
+        
+        window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+    }
+
+    init();
+</script>
+</body>
+</html>
